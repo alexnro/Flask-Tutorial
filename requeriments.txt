@@ -9,3 +9,4 @@ Wtforms
 Werkzeug
 Jwt
 Flask-moment
+Flask-babel
