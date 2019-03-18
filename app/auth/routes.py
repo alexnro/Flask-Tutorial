@@ -1,21 +1,22 @@
-from flask import render_template, flash, redirect, url_for, request, g
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, EditProfileForm, PostForm, ResetPasswordRequestForm, ResetPasswordForm
+from app.auth.forms import LoginForm, RegistrationForm, EditProfileForm, PostForm, ResetPasswordRequestForm
 from app.models import User, Post
 from werkzeug.urls import url_parse
 from datetime import datetime
-from app.email import send_password_reset_email
+from app.auth.email import send_password_reset_email
 from flask_babel import _, get_locale
+from app.auth import bp
 
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
+@bp.route('/', methods=['GET', 'POST'])
+@bp.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user)
+        post = Post(body=form.post.data, author=current_user, language=language)
         db.session.add(post)
         db.session.commit()
         flash(_('Your post is now live!'))
@@ -29,7 +30,7 @@ def index():
                            posts=posts.items, next_url=next_url, prev_url=prev_url)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -47,13 +48,13 @@ def login():
     return render_template('login.html', title=_('Sign In'), form=form)
 
 
-@app.route('/logout')
+@bp.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -68,7 +69,7 @@ def register():
     return render_template('register.html', title=_('Register'), form=form)
 
 
-@app.route('/user/<username>')
+@bp.route('/user/<username>')
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
@@ -88,10 +89,9 @@ def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
-    g.locale = str(get_locale())
 
 
-@app.route('/edit_profile', methods=['GET', 'POST'])
+@bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
     form = EditProfileForm(current_user.username)
@@ -107,7 +107,7 @@ def edit_profile():
     return render_template('edit_profile.html', title=_('Edit Profile'), form=form)
 
 
-@app.route('/follow/<username>')
+@bp.route('/follow/<username>')
 @login_required
 def follow(username):
     user = User.query.filter_by(username=username).first()
@@ -123,7 +123,7 @@ def follow(username):
     return redirect(url_for('user', username=username))
 
 
-@app.route('/unfollow/<username>')
+@bp.route('/unfollow/<username>')
 def unfollow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
@@ -138,7 +138,7 @@ def unfollow(username):
     return redirect(url_for('user', username=username))
 
 
-@app.route('/explore')
+@bp.route('/explore')
 def explore():
     page = request.args.get('page', type=int)
     posts = Post.query.order_by(Post.timestamp.desc()).paginate(
@@ -148,7 +148,7 @@ def explore():
     return render_template('index.html', title=_('Explore'), posts=posts.items, next_url=next_url, prev_url=prev_url)
 
 
-@app.route('/reset_password_request', methods=['GET', 'POST'])
+@bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -162,7 +162,7 @@ def reset_password_request():
     return render_template('reset_password_request.html', title=_('Reset password'), form=form)
 
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+@bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('index'))
