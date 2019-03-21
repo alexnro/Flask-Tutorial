@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.7.2
 
 RUN adduser microblog
 
@@ -7,12 +7,12 @@ WORKDIR /home/microblog
 COPY requirements.txt requirements.txt
 RUN python -m venv venv
 RUN venv/bin/pip install -r requirements.txt
-RUN venv/bin/pip install gunicorn
+RUN venv/bin/pip install gunicorn pymysql
 
 COPY app app
 COPY migrations migrations
 COPY microblog.py config.py boot.sh ./
-RUN chmod +x boot.sh
+RUN chmod a+x boot.sh
 
 ENV FLASK_APP microblog.py
 
