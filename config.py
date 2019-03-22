@@ -21,3 +21,4 @@ class Config(object):
     LANGUAGES = ['en', 'es']
     ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     POSTS_PER_PAGE = 25
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
