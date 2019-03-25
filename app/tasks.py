@@ -37,7 +37,7 @@ def export_posts(user_id):
                          'timestamp': post.timestamp.isoformat() + 'Z'})
             time.sleep(5)
             i += 1
-            _set_task_progress(100 * i)
+            _set_task_progress(100 * i // total_posts)
 
             send_email('[Microblog] Your blog posts',
                        sender=app.config['ADMINS'][0], recipients=[user.email],
