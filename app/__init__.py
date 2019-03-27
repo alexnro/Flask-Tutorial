@@ -2,7 +2,6 @@ import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
 from flask import Flask, request, current_app
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
@@ -13,9 +12,11 @@ from config import Config
 from elasticsearch import Elasticsearch
 from redis import Redis
 import rq
+from pymongo import MongoClient
 
-
-db = SQLAlchemy()
+client = MongoClient(
+    "mongodb+srv://first-user:123@young-sea-3503-yo9jq.mongodb.net/test?retryWrites=true")
+db = client.test
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
