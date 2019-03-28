@@ -14,9 +14,8 @@ from redis import Redis
 import rq
 from pymongo import MongoClient
 
-client = MongoClient(
-    "mongodb+srv://first-user:123@young-sea-3503-yo9jq.mongodb.net/test?retryWrites=true")
-db = client.test
+client = MongoClient(port=271017)
+db = client.microblog
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'

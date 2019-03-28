@@ -12,7 +12,9 @@ import redis
 import rq
 import base64
 import os
-
+import pymongo
+import pymodm
+from pymodm import MongoModel, fields
 
 class SearchableMixin(object):
 
@@ -78,40 +80,45 @@ class PaginatedAPIMixin(object):
         return data
 
 
-db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
-db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
+# TODO
+# db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
+# db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
 
-followers = db.Table(
-    'followers',
-    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
-)
+followers = db['followers']
 
 
-class User(PaginatedAPIMixin, UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
-    about_me = db.Column(db.String(140))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    followed = db.relationship(
-        'User', secondary=followers,
-        primaryjoin=(followers.c.follower_id == id),
-        secondaryjoin=(followers.c.followed_id == id),
-        backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
-    messages_sent = db.relationship('Message',
-                                    foreign_keys='Message.sender_id',
-                                    backref='author', lazy='dynamic')
-    messages_received = db.relationship('Message',
-                                        foreign_keys='Message.recipient_id',
-                                        backref='recipient', lazy='dynamic')
-    last_message_read_time = db.Column(db.DateTime)
-    notifications = db.relationship('Notification', backref='user', lazy='dynamic')
-    tasks = db.relationship('Task', backref='user', lazy='dynamic')
-    token = db.Column(db.String(32), index=True, unique=True)
-    token_expiration = db.Column(db.DateTime)
+class Post(SearchableMixin, MongoModel):
+    __searchable__ = ['body']
+    id = fields.IntegerField(primary_key=True)
+    body = fields.CharField()
+    timestamp = fields.TimestampField()
+    user_id = fields.IntegerField()
+
+    def __repr__(self):
+        return '<Post {}>'.format(self.body)
+
+
+class User(PaginatedAPIMixin, UserMixin, MongoModel):
+    followed = ""
+    messages_sent = ""
+    messages_received = ""
+    notifications = ""
+    tasks = ""
+    id = fields.IntegerField(primary_key=True)
+    username = fields.CharField()
+    email = fields.EmailField()
+    password_hash = fields.CharField()
+    posts = fields.ReferenceField(Post)
+    about_me = fields.CharField()
+    last_seen = fields.TimestampField()
+    followed = fields.ReferenceField(followed)
+    messages_sent = fields.ReferenceField(messages_sent)
+    messages_received = fields.ReferenceField(messages_received)
+    last_message_read_time = fields.TimestampField()
+    notifications = fields.ReferenceField(notifications)
+    tasks = fields.ReferenceField(tasks)
+    token = fields.CharField()
+    token_expiration = fields.TimestampField()
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -235,45 +242,34 @@ def load_user(id):
     return User.query.get(int(id))
 
 
-class Post(SearchableMixin, db.Model):
-    __searchable__ = ['body']
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def __repr__(self):
-        return '<Post {}>'.format(self.body)
-
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    body = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+class Message(MongoModel):
+    id = fields.IntegerField(primary_key=True)
+    sender_id = fields.IntegerField()
+    recipient_id = fields.IntegerField()
+    body = fields.CharField()
+    timestamp = fields.TimestampField()
 
     def __repr__(self):
         return '<Message {}>'.format(self.body)
 
 
-class Notification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    timestamp = db.Column(db.Float, index=True, default=time)
-    payload_json = db.Column(db.Text)
+class Notification(MongoModel):
+    id = fields.IntegerField(primary_key=True)
+    name = fields.CharField()
+    user_id = fields.IntegerField()
+    timestamp = fields.TimestampField()
+    payload_json = fields.GeoJSONField()
 
     def get_data(self):
         return json.loads(str(self.payload_json))
 
 
-class Task(db.Model):
-    id = db.Column(db.String(36), primary_key=True)
-    name = db.Column(db.String(128), index=True)
-    description = db.Column(db.String(128))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    complete = db.Column(db.Boolean, default=False)
+class Task(MongoModel):
+    id = fields.IntegerField(primary_key=True)
+    name = fields.CharField()
+    description = fields.CharField()
+    user_id = fields.IntegerField()
+    complete = fields.BooleanField()
 
     def get_rq_job(self):
         try:
