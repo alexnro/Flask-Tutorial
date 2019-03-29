@@ -12,10 +12,11 @@ from config import Config
 from elasticsearch import Elasticsearch
 from redis import Redis
 import rq
-from pymongo import MongoClient
+from flask_pymongo import PyMongo, MongoClient
 
+mongo_db = PyMongo()
 client = MongoClient(port=271017)
-db = client.microblog
+db = client.test
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
@@ -30,7 +31,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    db.init_app(app)
+    mongo_db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
     mail.init_app(app)

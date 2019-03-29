@@ -12,9 +12,11 @@ import redis
 import rq
 import base64
 import os
-import pymongo
+from flask_pymongo import MongoClient
 import pymodm
+import flask_pymongo
 from pymodm import MongoModel, fields
+
 
 class SearchableMixin(object):
 
