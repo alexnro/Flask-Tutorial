@@ -21,12 +21,12 @@ class RegistrationForm(FlaskForm):
 
     def validate_username(self, username):
         user = db.users.find({'_id': username})
-        if user is not None:
+        if user is True:
             raise ValidationError(_('Please use a different username.'))
 
     def validate_email(self, email):
         user = db.users.find({'email': email})
-        if user is not None:
+        if user is True:
             raise ValidationError(_('Please use a different email address.'))
 
 
