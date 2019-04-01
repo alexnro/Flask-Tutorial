@@ -16,6 +16,7 @@ from flask_pymongo import MongoClient
 import pymodm
 import flask_pymongo
 from pymodm import MongoModel, fields
+from datetime import datetime
 
 
 class SearchableMixin(object):
@@ -106,12 +107,12 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
     messages_received = ""
     notifications = ""
     tasks = ""
-    id = fields.IntegerField(primary_key=True)
-    username = fields.CharField()
+    id = fields.ObjectId()
+    username = fields.CharField(max_length=64)
     email = fields.EmailField()
-    password_hash = fields.CharField()
-    posts = fields.ReferenceField(Post)
-    about_me = fields.CharField()
+    password_hash = fields.CharField(max_length=128)
+    posts = fields.CharField()
+    about_me = fields.CharField(max_length=140)
     last_seen = fields.TimestampField()
     followed = fields.ReferenceField(followed)
     messages_sent = fields.ReferenceField(messages_sent)
@@ -119,7 +120,7 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
     last_message_read_time = fields.TimestampField()
     notifications = fields.ReferenceField(notifications)
     tasks = fields.ReferenceField(tasks)
-    token = fields.CharField()
+    token = fields.CharField(max_length=32)
     token_expiration = fields.TimestampField()
 
     def set_password(self, password):
@@ -191,12 +192,12 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 
     def to_dict(self, include_email=False):
         data = {
-            'id': self.id,
+            '_id': self.id,
             'username': self.username,
-            'last_seen': self.last_seen.isoformat() + 'Z',
+            'last_seen': self.last_seen,
             'about_me': self.about_me,
-            'post_count': self.posts.count(),
-            'follower_count': self.followers.count(),
+            'post_count': self.posts,
+            'follower_count': followers.count(),
             'followed_count': self.followed.count(),
             '_links': {
                 'self': url_for('api.get_user', id=self.id),
@@ -208,6 +209,9 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
         if include_email:
             data['email'] = self.email
         return data
+
+    def get_last_seen(self):
+        return
 
     def from_dict(self, data, new_user=False):
         for field in ['username', 'email', 'about_me']:
