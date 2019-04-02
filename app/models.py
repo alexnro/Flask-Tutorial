@@ -196,9 +196,9 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
             'username': self.username,
             'last_seen': self.last_seen,
             'about_me': self.about_me,
-            'post_count': self.posts,
-            'follower_count': followers.count(),
-            'followed_count': self.followed.count(),
+            'post_count': {"$sum": self.posts},
+            'follower_count': {"$sum": followers},
+            'followed_count': {"$sum": self.followed},
             '_links': {
                 'self': url_for('api.get_user', id=self.id),
                 'followers': url_for('api.get_followers', id=self.id),
