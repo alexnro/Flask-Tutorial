@@ -17,8 +17,9 @@ def login():
     form = LoginForm()
     username = form.username.data
     if form.validate_on_submit():
-        user = db.blogUsers.find({"username": username})
-        if user is None or not user.check_password(form.password.data):
+        # user = User.query.filter_by(username=form.username.data).first()
+        user = db.blogUsers.find({'username': username})
+        if user is None or not User.check_password(User, form.password.data):
             flash(_('Invalid username or password'))
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
