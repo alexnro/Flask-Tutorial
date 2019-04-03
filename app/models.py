@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from hashlib import md5
-from app import db, login, client
+from app import db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -12,11 +12,10 @@ import redis
 import rq
 import base64
 import os
-from flask_pymongo import MongoClient
-import pymodm
-import flask_pymongo
 from pymodm import MongoModel, fields
 from datetime import datetime
+from bson.codec_options import CodecOptions
+import bson
 
 
 class SearchableMixin(object):
@@ -245,7 +244,10 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 
 @login.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    # return User.query.get(int(id))
+    user_id = db.blogUsers.find_one({id})
+    enconded_id = bson.CodecOptions(user_id)
+    return enconded_id
 
 
 class Message(MongoModel):

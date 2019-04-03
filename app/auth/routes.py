@@ -18,12 +18,13 @@ def login():
     username = form.username.data
     if form.validate_on_submit():
         # user = User.query.filter_by(username=form.username.data).first()
-        user = db.blogUsers.find({'username': username})
-        password = db.blogUsers.find({'password_hash': form.password.data})
+        user = db.blogUsers.find_one_or_404({'username': username})
+        password = db.blogUsers.find_one({'password_hash': form.password.data})
         if user is None or password is None:
             flash(_('Invalid username or password'))
             return redirect(url_for('auth.login'))
-        login_user(User.username, remember=form.remember_me.data)
+        user_obj = User(user['_id'])
+        login_user(user_obj, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('main.index')
