@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
-import config
-
+from flask_pymongo import MongoClient
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
@@ -11,6 +10,10 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
 
     MONGO_URI = "mongodb://[new_user:123@192.168.2.50:27017"
+    CLIENT = MongoClient()['microblog']
+    POSTS_COLLECTION = CLIENT.posts
+    USERS_COLLECTION = CLIENT.blogUsers
+    FOLLOWERS_COLLECTION = CLIENT.followers
     # config["MONGO_URI"] = "mongodb://localhost:27017/microblog"
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'app.db')
     # SQLALCHEMY_TRACK_MODIFICATIONS = False
