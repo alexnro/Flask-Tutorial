@@ -245,9 +245,7 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 @login.user_loader
 def load_user(id):
     # return User.query.get(int(id))
-    user_id = db.blogUsers.find_one({id})
-    enconded_id = bson.CodecOptions(user_id)
-    return enconded_id
+    return db.blogUsers.find_one({id})
 
 
 class Message(MongoModel):
