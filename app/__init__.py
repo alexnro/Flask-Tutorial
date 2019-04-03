@@ -14,9 +14,10 @@ from redis import Redis
 import rq
 from flask_pymongo import PyMongo, MongoClient
 
+
 mongo_db = PyMongo()
-client = MongoClient(port=271017)
-db = client.test
+client = MongoClient(port=27017)
+db = client.microblog
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
