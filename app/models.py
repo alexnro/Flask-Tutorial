@@ -12,6 +12,7 @@ import redis
 import rq
 import base64
 import os
+import config
 from pymodm import MongoModel, fields
 from datetime import datetime
 from bson.codec_options import CodecOptions
@@ -106,9 +107,9 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
     messages_received = ""
     notifications = ""
     tasks = ""
-    id = fields.ObjectId()
-    username = fields.CharField(max_length=64)
-    email = fields.EmailField()
+    id = fields.IntegerField(primary_key=True)
+    username = fields.CharField(max_length=64, required=True)
+    email = fields.EmailField(required=True)
     password_hash = fields.CharField(max_length=128)
     posts = fields.CharField()
     about_me = fields.CharField(max_length=140)
@@ -199,9 +200,9 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
             'follower_count': {"$sum": followers},
             'followed_count': {"$sum": self.followed},
             '_links': {
-                'self': url_for('api.get_user', id=self.id),
-                'followers': url_for('api.get_followers', id=self.id),
-                'followed': url_for('api.get_followed', id=self.id),
+                'self': url_for('api.get_user', id=self.get_id()),
+                'followers': url_for('api.get_followers', id=self.get_id()),
+                'followed': url_for('api.get_followed', id=self.get_id()),
                 'avatar': self.avatar(128)
             }
         }
@@ -241,8 +242,10 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 
 @login.user_loader
 def load_user(id):
-    # return User.query.get(int(id))
-    return db.blogUsers.find_one(str({id}))
+    u = db.blogUsers.find_one({"_id": id})
+    if not u:
+        return None
+    return User(u['_id'])
 
 
 class Message(MongoModel):
