@@ -5,7 +5,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from time import time
-from flask import current_app, url_for
+from flask import current_app, url_for, jsonify
 from app.search import add_to_index, remove_from_index, query_index
 import json
 import redis
@@ -209,9 +209,6 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
             data['email'] = self.email
         return data
 
-    def get_last_seen(self):
-        return
-
     def from_dict(self, data, new_user=False):
         for field in ['username', 'email', 'about_me']:
             if field in data:
@@ -245,7 +242,7 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 @login.user_loader
 def load_user(id):
     # return User.query.get(int(id))
-    return db.blogUsers.find_one({id})
+    return db.blogUsers.find_one(str({id}))
 
 
 class Message(MongoModel):
