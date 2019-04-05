@@ -18,7 +18,7 @@ def login():
     username = form.username.data
     if form.validate_on_submit():
         user = db.blogUsers.find_one_or_404({'username': username})
-        if user and User.check_password(user['password'], form.password.data):
+        if user and user['password'] == form.password.data:
             flash(_('Invalid username or password'))
             return redirect(url_for('auth.login'))
         user_obj = User(user['_id'])
@@ -43,8 +43,8 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data).to_dict()
-        user.set_password(form.password.data)
-        db.users.insert_one(user)
+        User.get_id(user).set_password(form.password.data)
+        db.blogUsers.insert_one(user)
         flash(_('Congratulations, you are now a registered user!'))
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title=_('Register'), form=form)

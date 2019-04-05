@@ -9,7 +9,7 @@ from app.api.auth import token_auth
 @bp.route('/users/<int:id>', methods=['GET'])
 @token_auth.login_required
 def get_user(id):
-    return jsonify(User.query.get_or_404(id).to_dict())
+    return jsonify(db.blogUsers.find_one_or_404({id}).to_dict())
 
 
 @bp.route('/users', methods=['GET'])
@@ -48,7 +48,7 @@ def create_user():
     if 'username' not in data or 'email' not in data or 'password' not in data:
         return bad_request('must include username, email and password fields')
     # if User.query.filter_by(username=data['username']).first():
-    if db.Users.filter({'_id': User.id}):
+    if db.Users.filter({'_id': User._id}):
         return bad_request('please use a different username')
     if User.query.filter_by(email=data['email']).first():
         return bad_request('please user a different email address')
@@ -57,7 +57,7 @@ def create_user():
     db.Users.insert(user)
     response = jsonify(user.to_dict())
     response.status_code = 201
-    response.headers['Location'] = url_for('api.get_user', id=user.id)
+    response.headers['Location'] = url_for('api.get_user', id=user._id)
     return response
 
 

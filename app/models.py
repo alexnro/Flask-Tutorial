@@ -12,11 +12,8 @@ import redis
 import rq
 import base64
 import os
-import config
 from pymodm import MongoModel, fields
 from datetime import datetime
-from bson.codec_options import CodecOptions
-import bson
 
 
 class SearchableMixin(object):
@@ -107,7 +104,7 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
     messages_received = ""
     notifications = ""
     tasks = ""
-    id = fields.IntegerField(primary_key=True)
+    _id = fields.IntegerField(primary_key=True)
     username = fields.CharField(max_length=64, required=True)
     email = fields.EmailField(required=True)
     password_hash = fields.CharField(max_length=128)
@@ -149,13 +146,13 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
     def followed_posts(self):
         followed = Post.query.join(
             followers, (followers.c.followed_id == Post.user_id)).filter(
-            followers.c.follower_id == self.id)
-        own = Post.query.filter_by(user_id=self.id)
+            followers.c.follower_id == self._id)
+        own = Post.query.filter_by(user_id=self._id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
-            {'reset_passord': self.id, 'exp': time() + expires_in},
+            {'reset_passord': self._id, 'exp': time() + expires_in},
             current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
 
     @staticmethod
@@ -179,7 +176,7 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
         return n
 
     def launch_task(self, name, description, *args, **kwargs):
-        rq_job = current_app.task_queue.enqueue('app.tasks.' + name, self.id, *args, **kwargs)
+        rq_job = current_app.task_queue.enqueue('app.tasks.' + name, self._id, *args, **kwargs)
         task = Task(id=rq_job.get_id(), name=name, description=description, user=self)
         db.session.add(task)
         return task
@@ -190,9 +187,16 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
     def get_task_in_progress(self, name):
         return Task.query.filter_by(name=name, user=self, complete=False).first()
 
+    def auto_increment_id(self):
+        id = 0
+        for ids in db.blogUsers.find({}):
+            id += 1
+        return id
+
     def to_dict(self, include_email=False):
         data = {
-            '_id': self.id,
+            # Change id to be auto incremented
+            '_id': self.auto_increment_id(),
             'username': self.username,
             'last_seen': self.last_seen,
             'about_me': self.about_me,
@@ -200,9 +204,9 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
             'follower_count': {"$sum": followers},
             'followed_count': {"$sum": self.followed},
             '_links': {
-                'self': url_for('api.get_user', id=self.get_id()),
-                'followers': url_for('api.get_followers', id=self.get_id()),
-                'followed': url_for('api.get_followed', id=self.get_id()),
+                'self': url_for('api.get_user', id=self.auto_increment_id()),
+                'followers': url_for('api.get_followers', id=self.auto_increment_id()),
+                'followed': url_for('api.get_followed', id=self.auto_increment_id()),
                 'avatar': self.avatar(128)
             }
         }
