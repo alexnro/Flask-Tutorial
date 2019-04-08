@@ -43,7 +43,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data).to_dict()
-        User.get_id(user).set_password(form.password.data)
+        User(current_user).set_password(form.password.data)
         db.blogUsers.insert_one(user)
         flash(_('Congratulations, you are now a registered user!'))
         return redirect(url_for('auth.login'))
