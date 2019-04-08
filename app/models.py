@@ -5,7 +5,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from time import time
-from flask import current_app, url_for, jsonify
+from flask import current_app, url_for
 from app.search import add_to_index, remove_from_index, query_index
 import json
 import redis
@@ -195,14 +195,13 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 
     def to_dict(self, include_email=False):
         data = {
-            # Change id to be auto incremented
             '_id': self.auto_increment_id(),
             'username': self.username,
             'last_seen': self.last_seen,
             'about_me': self.about_me,
-            'post_count': {"$sum": self.posts},
-            'follower_count': {"$sum": followers},
-            'followed_count': {"$sum": self.followed},
+            'post_count': self.posts,
+            'follower_count': followers,
+            'followed_count': self.followed,
             '_links': {
                 'self': url_for('api.get_user', id=self.auto_increment_id()),
                 'followers': url_for('api.get_followers', id=self.auto_increment_id()),
