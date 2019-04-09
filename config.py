@@ -8,8 +8,8 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-
-    MONGO_URI = "mongodb://[new_user:123@192.168.2.50:27017"
+    #             mongodb://[new_user:123@192.168.2.50:27017
+    MONGO_URI = "mongodb://localhost:27017/microblog"
     CLIENT = MongoClient()['microblog']
     POSTS_COLLECTION = CLIENT.posts
     USERS_COLLECTION = CLIENT.blogUsers

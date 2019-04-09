@@ -14,6 +14,8 @@ import base64
 import os
 from pymodm import MongoModel, fields
 from datetime import datetime
+from bson.raw_bson import RawBSONDocument
+from bson.codec_options import CodecOptions
 
 
 class SearchableMixin(object):
@@ -84,7 +86,8 @@ class PaginatedAPIMixin(object):
 # db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
 # db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
 
-followers = db['followers']
+codec_options = CodecOptions(document_class=RawBSONDocument)
+followers = db.get_collection('followers', codec_options=codec_options)
 
 
 class Post(SearchableMixin, MongoModel):
