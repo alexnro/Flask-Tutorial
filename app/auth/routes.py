@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request
 from werkzeug.urls import url_parse
 from flask_login import login_user, logout_user, current_user
 from flask_babel import _
@@ -8,7 +8,6 @@ from app.auth.forms import LoginForm, RegistrationForm, \
     ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User
 from app.auth.email import send_password_reset_email
-from json import loads
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -43,9 +42,11 @@ def register():
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data).to_dict()
-        User(current_user).set_password(form.password.data)
-        db.blogUsers.insert_one(user)
+        user = User(_id=1, username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        user.save()
+        # User(current_user).set_password()
+        # db.blogUsers.insert_one(user)
         flash(_('Congratulations, you are now a registered user!'))
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title=_('Register'), form=form)

@@ -12,7 +12,8 @@ import redis
 import rq
 import base64
 import os
-from pymodm import MongoModel, fields
+from flask_mongoengine import Document
+from mongoengine import fields
 from datetime import datetime
 from bson.raw_bson import RawBSONDocument
 from bson.codec_options import CodecOptions
@@ -90,38 +91,38 @@ codec_options = CodecOptions(document_class=RawBSONDocument)
 followers = db.get_collection('followers', codec_options=codec_options)
 
 
-class Post(SearchableMixin, MongoModel):
+class Post(SearchableMixin, Document):
     __searchable__ = ['body']
-    id = fields.IntegerField(primary_key=True)
-    body = fields.CharField()
-    timestamp = fields.TimestampField()
-    user_id = fields.IntegerField()
+    id = fields.IntField(primary_key=True)
+    body = fields.StringField()
+    timestamp = fields.DateTimeField()
+    user_id = fields.IntField()
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
 
 
-class User(PaginatedAPIMixin, UserMixin, MongoModel):
+class User(PaginatedAPIMixin, UserMixin, Document):
     followed = ""
     messages_sent = ""
     messages_received = ""
     notifications = ""
     tasks = ""
-    _id = fields.IntegerField(primary_key=True)
-    username = fields.CharField(max_length=64, required=True)
+    _id = fields.IntField(primary_key=True)
+    username = fields.StringField(max_length=64, required=True)
     email = fields.EmailField(required=True)
-    password_hash = fields.CharField(max_length=128)
-    posts = fields.CharField()
-    about_me = fields.CharField(max_length=140)
-    last_seen = fields.TimestampField()
+    password_hash = fields.StringField(max_length=128)
+    posts = fields.StringField()
+    about_me = fields.StringField(max_length=140)
+    last_seen = fields.DateTimeField()
     followed = fields.ReferenceField(followed)
     messages_sent = fields.ReferenceField(messages_sent)
     messages_received = fields.ReferenceField(messages_received)
-    last_message_read_time = fields.TimestampField()
+    last_message_read_time = fields.DateTimeField()
     notifications = fields.ReferenceField(notifications)
     tasks = fields.ReferenceField(tasks)
-    token = fields.CharField(max_length=32)
-    token_expiration = fields.TimestampField()
+    token = fields.StringField(max_length=32)
+    token_expiration = fields.DateTimeField()
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -253,33 +254,33 @@ def load_user(id):
     return User(u['_id'])
 
 
-class Message(MongoModel):
-    id = fields.IntegerField(primary_key=True)
-    sender_id = fields.IntegerField()
-    recipient_id = fields.IntegerField()
-    body = fields.CharField()
-    timestamp = fields.TimestampField()
+class Message(Document):
+    id = fields.IntField(primary_key=True)
+    sender_id = fields.IntField()
+    recipient_id = fields.IntField()
+    body = fields.StringField()
+    timestamp = fields.DateTimeField()
 
     def __repr__(self):
         return '<Message {}>'.format(self.body)
 
 
-class Notification(MongoModel):
-    id = fields.IntegerField(primary_key=True)
-    name = fields.CharField()
-    user_id = fields.IntegerField()
-    timestamp = fields.TimestampField()
-    payload_json = fields.GeoJSONField()
+class Notification(Document):
+    id = fields.IntField(primary_key=True)
+    name = fields.StringField()
+    user_id = fields.IntField()
+    timestamp = fields.DateTimeField()
+    payload_json = fields.GeoJsonBaseField()
 
     def get_data(self):
         return json.loads(str(self.payload_json))
 
 
-class Task(MongoModel):
-    id = fields.IntegerField(primary_key=True)
-    name = fields.CharField()
-    description = fields.CharField()
-    user_id = fields.IntegerField()
+class Task(Document):
+    id = fields.IntField(primary_key=True)
+    name = fields.StringField()
+    description = fields.StringField()
+    user_id = fields.IntField()
     complete = fields.BooleanField()
 
     def get_rq_job(self):

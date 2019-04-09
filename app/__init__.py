@@ -13,8 +13,10 @@ from elasticsearch import Elasticsearch
 from redis import Redis
 import rq
 from flask_pymongo import PyMongo, MongoClient
+from flask_mongoengine import MongoEngine
 
 
+mongo = MongoEngine()
 mongo_db = PyMongo()
 client = MongoClient(port=27017)
 db = client.microblog
@@ -32,6 +34,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    mongo.init_app(app)
     mongo_db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
