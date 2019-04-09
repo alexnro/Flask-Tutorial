@@ -198,7 +198,6 @@ class User(PaginatedAPIMixin, UserMixin, MongoModel):
 
     def to_dict(self, include_email=False):
         data = {
-            '_id': self.auto_increment_id(),
             'username': self.username,
             'last_seen': self.last_seen,
             'about_me': self.about_me,
