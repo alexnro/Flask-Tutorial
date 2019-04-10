@@ -8,6 +8,7 @@ from app.auth.forms import LoginForm, RegistrationForm, \
     ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User
 from app.auth.email import send_password_reset_email
+from app.models import User
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -17,8 +18,10 @@ def login():
     form = LoginForm()
     username = form.username.data
     if form.validate_on_submit():
-        user = db.blogUsers.find_one_or_404({'username': username})
-        if user and user['password'] == form.password.data:
+        user = db.user.find_one_or_404({'username': username})
+        get_password_hash = db.user.find_one({'username': username}.get('password_hash'))
+        password = form.password.data
+        if not user or User.check_password(get_password_hash, password):
             flash(_('Invalid username or password'))
             return redirect(url_for('auth.login'))
         user_obj = User(user['_id'])
@@ -36,17 +39,22 @@ def logout():
     return redirect(url_for('main.index'))
 
 
+def auto_increment_id():
+    id = 0
+    for ids in db.user.find({}):
+        id += 1
+    return id
+
+
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(_id=1, username=form.username.data, email=form.email.data)
+        user = User(_id=auto_increment_id(), username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
-        user.save()
-        # User(current_user).set_password()
-        # db.blogUsers.insert_one(user)
+        user.save(validate=True)
         flash(_('Congratulations, you are now a registered user!'))
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title=_('Register'), form=form)

@@ -9,7 +9,7 @@ from app.api.auth import token_auth
 @bp.route('/users/<int:id>', methods=['GET'])
 @token_auth.login_required
 def get_user(id):
-    return jsonify(db.blogUsers.find_one_or_404({id}).to_dict())
+    return jsonify(db.user.find_one_or_404({id}).to_dict())
 
 
 @bp.route('/users', methods=['GET'])

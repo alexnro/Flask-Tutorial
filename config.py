@@ -12,7 +12,7 @@ class Config(object):
     MONGO_URI = "mongodb://localhost:27017/microblog"
     CLIENT = connect('microblog', host='mongodb://localhost:27017/microblog')
     POSTS_COLLECTION = CLIENT.posts
-    USERS_COLLECTION = CLIENT.blogUsers
+    USERS_COLLECTION = CLIENT.user
     FOLLOWERS_COLLECTION = CLIENT.followers
     # config["MONGO_URI"] = "mongodb://localhost:27017/microblog"
 

@@ -111,10 +111,10 @@ class User(PaginatedAPIMixin, UserMixin, Document):
     _id = fields.IntField(primary_key=True)
     username = fields.StringField(max_length=64, required=True)
     email = fields.EmailField(required=True)
-    password_hash = fields.StringField(max_length=128)
+    password_hash = fields.StringField(max_length=128, required=True)
     posts = fields.StringField()
     about_me = fields.StringField(max_length=140)
-    last_seen = fields.DateTimeField()
+    last_seen = fields.DateTimeField(required=True)
     followed = fields.ReferenceField(followed)
     messages_sent = fields.ReferenceField(messages_sent)
     messages_received = fields.ReferenceField(messages_received)
@@ -191,12 +191,6 @@ class User(PaginatedAPIMixin, UserMixin, Document):
     def get_task_in_progress(self, name):
         return Task.query.filter_by(name=name, user=self, complete=False).first()
 
-    def auto_increment_id(self):
-        id = 0
-        for ids in db.blogUsers.find({}):
-            id += 1
-        return id
-
     def to_dict(self, include_email=False):
         data = {
             'username': self.username,
@@ -206,9 +200,9 @@ class User(PaginatedAPIMixin, UserMixin, Document):
             'follower_count': followers,
             'followed_count': self.followed,
             '_links': {
-                'self': url_for('api.get_user', id=self.auto_increment_id()),
-                'followers': url_for('api.get_followers', id=self.auto_increment_id()),
-                'followed': url_for('api.get_followed', id=self.auto_increment_id()),
+                'self': url_for('api.get_user', id=self._id),
+                'followers': url_for('api.get_followers', id=self._id),
+                'followed': url_for('api.get_followed', id=self._id),
                 'avatar': self.avatar(128)
             }
         }
@@ -248,7 +242,7 @@ class User(PaginatedAPIMixin, UserMixin, Document):
 
 @login.user_loader
 def load_user(id):
-    u = db.blogUsers.find_one({"_id": id})
+    u = db.user.find_one({"_id": id})
     if not u:
         return None
     return User(u['_id'])
