@@ -114,7 +114,7 @@ class User(PaginatedAPIMixin, UserMixin, Document):
     password_hash = fields.StringField(max_length=128, required=True)
     posts = fields.StringField()
     about_me = fields.StringField(max_length=140)
-    last_seen = fields.DateTimeField(required=True)
+    last_seen = fields.DateTimeField()
     followed = fields.ReferenceField(followed)
     messages_sent = fields.ReferenceField(messages_sent)
     messages_received = fields.ReferenceField(messages_received)
