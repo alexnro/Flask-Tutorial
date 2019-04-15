@@ -4,17 +4,18 @@ from mongoengine import connect
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
+connect('microblog', host='mongodb://localhost:27017/microblog')
 
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     #             mongodb://[new_user:123@192.168.2.50:27017
-    MONGO_URI = "mongodb://localhost:27017/microblog"
-    MONGO_DBNAME = 'microblog'
-    CLIENT = connect('microblog', host='mongodb://localhost:27017/microblog')
-    POSTS_COLLECTION = CLIENT.posts
-    USERS_COLLECTION = CLIENT.user
-    FOLLOWERS_COLLECTION = CLIENT.followers
+    # MONGO_URI = "mongodb://localhost:27017/microblog"
+    # MONGO_DBNAME = 'microblog'
+    # CLIENT =
+    # POSTS_COLLECTION = CLIENT.posts
+    # USERS_COLLECTION = CLIENT.user
+    # FOLLOWERS_COLLECTION = CLIENT.followers
     # config["MONGO_URI"] = "mongodb://localhost:27017/microblog"
 
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
