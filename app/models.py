@@ -91,23 +91,7 @@ codec_options = CodecOptions(document_class=RawBSONDocument)
 followers = db.get_collection('followers', codec_options=codec_options)
 
 
-class Post(SearchableMixin, Document):
-    __searchable__ = ['body']
-    id = fields.IntField(primary_key=True)
-    body = fields.StringField()
-    timestamp = fields.DateTimeField()
-    user_id = fields.IntField()
-
-    def __repr__(self):
-        return '<Post {}>'.format(self.body)
-
-
 class User(PaginatedAPIMixin, UserMixin, Document):
-    followed = ""
-    messages_sent = ""
-    messages_received = ""
-    notifications = ""
-    tasks = ""
     _id = fields.IntField(primary_key=True)
     username = fields.StringField(max_length=64, required=True)
     email = fields.EmailField(required=True)
@@ -115,12 +99,10 @@ class User(PaginatedAPIMixin, UserMixin, Document):
     posts = fields.StringField()
     about_me = fields.StringField(max_length=140)
     last_seen = fields.DateTimeField()
-    followed = fields.ReferenceField(followed)
-    messages_sent = fields.ReferenceField(messages_sent)
-    messages_received = fields.ReferenceField(messages_received)
+    # followed = fields.ReferenceField(followed)
+    messages_sent = fields.StringField()
+    messages_received = fields.StringField()
     last_message_read_time = fields.DateTimeField()
-    notifications = fields.ReferenceField(notifications)
-    tasks = fields.ReferenceField(tasks)
     token = fields.StringField(max_length=32)
     token_expiration = fields.DateTimeField()
 
@@ -197,8 +179,8 @@ class User(PaginatedAPIMixin, UserMixin, Document):
             'last_seen': self.last_seen,
             'about_me': self.about_me,
             'post_count': self.posts,
-            'follower_count': followers,
-            'followed_count': self.followed,
+            # 'follower_count': db.users.find({'followers': {'$in'}}),
+            # 'followed_count': db.users.find({'followed': {'$in'}}),
             '_links': {
                 'self': url_for('api.get_user', id=self._id),
                 'followers': url_for('api.get_followers', id=self._id),
@@ -248,12 +230,26 @@ def load_user(id):
     return User(u['_id'])
 
 
+class Post(SearchableMixin, Document):
+    __searchable__ = ['body']
+    id = fields.IntField(primary_key=True)
+    body = fields.StringField()
+    timestamp = fields.DateTimeField()
+    user_id = fields.IntField()
+    user = fields.ReferenceField(User)
+
+    def __repr__(self):
+        return '<Post {}>'.format(self.body)
+
+
 class Message(Document):
     id = fields.IntField(primary_key=True)
     sender_id = fields.IntField()
     recipient_id = fields.IntField()
     body = fields.StringField()
     timestamp = fields.DateTimeField()
+    messages_sent = fields.ReferenceField(User)
+    messages_received = fields.ReferenceField(User)
 
     def __repr__(self):
         return '<Message {}>'.format(self.body)
@@ -265,6 +261,7 @@ class Notification(Document):
     user_id = fields.IntField()
     timestamp = fields.DateTimeField()
     payload_json = fields.GeoJsonBaseField()
+    notifications = fields.ReferenceField(User)
 
     def get_data(self):
         return json.loads(str(self.payload_json))
@@ -276,6 +273,7 @@ class Task(Document):
     description = fields.StringField()
     user_id = fields.IntField()
     complete = fields.BooleanField()
+    tasks = fields.ReferenceField(User)
 
     def get_rq_job(self):
         try:
