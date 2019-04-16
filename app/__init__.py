@@ -34,7 +34,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     app.config['MONGODB_NAME'] = 'microblog'
-    app.config['MONGO_URI'] = "mongodb+srv://admin:123@microblog-vlpzh.mongodb.net/test?retryWrites=true"
+    app.config['MONGO_URI'] = "mongodb+srv://admin:123@microblog-vlpzh.mongodb.net/microblog?retryWrites=true"
 
     mongo.init_app(app)
     mongo_db.init_app(app)

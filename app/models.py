@@ -92,8 +92,8 @@ followers = db.get_collection('followers', codec_options=codec_options)
 
 
 class User(PaginatedAPIMixin, UserMixin, Document):
-    _id = fields.IntField(primary_key=True)
-    username = fields.StringField(max_length=64, required=True)
+    _id = fields.ObjectId()
+    username = fields.StringField(primary_key=True, max_length=64, required=True)
     email = fields.EmailField(required=True)
     password_hash = fields.StringField(max_length=128, required=True)
     posts = fields.StringField()
@@ -237,6 +237,7 @@ class Post(SearchableMixin, Document):
     timestamp = fields.DateTimeField()
     user_id = fields.IntField()
     user = fields.ReferenceField(User)
+    meta = {'allow_inheritance': True}
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
